@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
 			schemalist = 1;
 			break;
 		case 'v':
-			printf("EVE static2db version 0.0.1");
+			printf("EVE sdd2json version 0.0.1");
 			return 0;
 		case 'D':
 			dblist = 1;
@@ -405,7 +405,7 @@ void db3_column_text(char *buf, sqlite3_stmt *stmt, int col, unsigned int siz) {
 }
 
 unsigned int dump_usage(void) {
-	printf("usage: static2db <-i data_dir> <-n version> [opts]\n");
+	printf("usage: sdd2json <-i data_dir> <-n version> [opts]\n");
 	printf("\t-i data_dir: path to the EVE static data dump files\n");
 	printf("\t-n version: the version ID of the static data\n");
 	printf("\t-N verdesc: a descriptive name for the static data version\n");
