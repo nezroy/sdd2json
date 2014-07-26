@@ -13,11 +13,6 @@
 #include "getopt.h"
 
 #include "sdd2json.h"
-#include "map.h"
-#include "inv.h"
-
-unsigned short GZIP_FLAG = 1;
-unsigned short JSONP_FLAG = 1;
 
 int main(int argc, char* argv[]) {
 	int c;
@@ -27,13 +22,13 @@ int main(int argc, char* argv[]) {
 	char *datadir = NULL;
 	char *verdesc = NULL;
 	char *verstr = NULL;
+	char *prefix = NULL;
 	unsigned int version = 0;
 	char *schemastr = NULL;
-	unsigned int schema = 0;
-	char *outdir = NULL;
 	unsigned short usage = 0;
 	unsigned short dblist = 0;
 	unsigned short schemalist = 0;
+	unsigned short prefixlist = 0;
 	unsigned short trusted = 1;
 	unsigned char term = '\0';
 
@@ -43,14 +38,10 @@ int main(int argc, char* argv[]) {
 	char gfxids_yaml[BUFLEN] = NULLSTR;
 	char iconids_yaml[BUFLEN] = NULLSTR;
 	char typeids_yaml[BUFLEN] = NULLSTR;
+	char blueprints_yaml[BUFLEN] = NULLSTR;
 
-	// SQLlite things
-	sqlite3 *udd_db3 = NULL;
+	// SQL things
 	int db3_rc;
-
-	// SQL server things
-	SQLHENV henv = SQL_NULL_HENV;
-	SQLHDBC hdbc = SQL_NULL_HDBC;
 	SQLRETURN ret;
 	SQLCHAR connStrOut[BUFLEN] = NULLSTR;
 	SQLCHAR dsn[BUFLEN] = NULLSTR;
@@ -59,7 +50,17 @@ int main(int argc, char* argv[]) {
 	SQLCHAR pwd[BUFLEN] = NULLSTR;
 	SQLSMALLINT connStrLen;
 
-	while ((c = getopt(argc, argv, "i:o:d:u:p:n:N:s:hvDSZP")) != -1) {
+	// set globals
+	GZIP_FLAG = 1;
+	JSONP_FLAG = 1;
+	SCHEMA = 0;
+	JSON_DIR = NULL;
+	H_ENV = SQL_NULL_HENV;
+	H_DBC = SQL_NULL_HDBC;
+	H_DBC2 = SQL_NULL_HDBC;
+	DB3_UD = NULL;
+
+	while ((c = getopt(argc, argv, "i:o:d:u:p:n:N:s:x:hvXDSZP")) != -1) {
 		switch (c) {
 		case 'i':
 			datadir = (char *)malloc(BUFLEN);
@@ -70,12 +71,16 @@ int main(int argc, char* argv[]) {
 			}
 			break;
 		case 'o':
-			outdir = (char *)malloc(BUFLEN);
-			strlcpy(outdir, optarg, BUFLEN);
-			term = outdir[strlen(outdir) - 1];
+			JSON_DIR = (char *)malloc(BUFLEN);
+			strlcpy(JSON_DIR, optarg, BUFLEN);
+			term = JSON_DIR[strlen(JSON_DIR) - 1];
 			if (term != PATHSEP) {
-				strlcat(outdir, SZPATHSEP, BUFLEN);
+				strlcat(JSON_DIR, SZPATHSEP, BUFLEN);
 			}
+			break;
+		case 'x':
+			prefix = (char *)malloc(BUFLEN);
+			strlcpy(prefix, optarg, BUFLEN);
 			break;
 		case 'd':
 			dbname = (char *)malloc(BUFLEN);
@@ -97,7 +102,7 @@ int main(int argc, char* argv[]) {
 			schemalist = 1;
 			break;
 		case 'v':
-			printf("EVE sdd2json version 0.0.1");
+			printf("sdd2json version %d.%d.%d", SDD2JSON_V_MAJOR, SDD2JSON_V_MINOR, SDD2JSON_V_PATCH);
 			return 0;
 		case 'D':
 			dblist = 1;
@@ -116,6 +121,8 @@ int main(int argc, char* argv[]) {
 		case 'Z':
 			GZIP_FLAG = 0;
 			break;
+		case 'X':
+			prefixlist = 1;
 		case '?':
 			printf("\n");
 			usage = 1;
@@ -127,6 +134,16 @@ int main(int argc, char* argv[]) {
 		for (unsigned int i = 0; i < VERS_N; i++) {
 			printf("%s:\tversion %d;\tschema %d\n", VERS[i].version_desc, VERS[i].version_id, VERS[i].schema_id);
 		}
+		return 0;
+	}
+
+	if (1 == prefixlist) {
+		printf("\tcrp\n");
+		printf("\tdgm\n");
+		printf("\tinv\n");
+		printf("\tmap\n");
+		printf("\tram\n");
+		printf("\tsta\n");
 		return 0;
 	}
 
@@ -154,7 +171,7 @@ int main(int argc, char* argv[]) {
 	for (unsigned int i = 0; i < VERS_N; i++) {
 		if (VERS[i].version_id == version) {
 			found_version = 1;
-			schema = VERS[i].schema_id;
+			SCHEMA = VERS[i].schema_id;
 			if (NULL == verdesc) {
 				verdesc = (char *)malloc(BUFLEN);
 				strlcpy(verdesc, VERS[i].version_desc, BUFLEN);
@@ -166,16 +183,16 @@ int main(int argc, char* argv[]) {
 		fprintf(stderr, "warning: using unknown static data version ID: %d\n", version);
 	}
 	if (schemastr != NULL) {
-		if (0 != schema) {
+		if (0 != SCHEMA) {
 			fprintf(stderr, "warning: overriding known schema ID\n");
 		}
-		schema = atoi(schemastr);
+		SCHEMA = atoi(schemastr);
 	}
-	if (0 == schema) {
+	if (0 == SCHEMA) {
 		fprintf(stderr, "schema ID is required\n");
 		return 1;
 	}
-	printf("static data: '%s', version %d, schema %d\n", verdesc, version, schema);
+	printf("static data: '%s', version %d, schema %d\n", verdesc, version, SCHEMA);
 
 	// validate input/schema
 	printf("checking input: %s - ", datadir);
@@ -185,7 +202,7 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 		
-	if (schema >= 95173) {
+	if (SCHEMA >= 100038) {
 		strlcpy(cert_yaml, datadir, BUFLEN);
 		strlcat(cert_yaml, "certificates.yaml", BUFLEN);
 		if (ACCESS(cert_yaml, 0) != 0) {
@@ -195,7 +212,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	if (schema >= 95173) {
+	if (SCHEMA >= 100038) {
 		strlcpy(gfxids_yaml, datadir, BUFLEN);
 		strlcat(gfxids_yaml, "graphicIDs.yaml", BUFLEN);
 		if (ACCESS(gfxids_yaml, 0) != 0) {
@@ -205,7 +222,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	if (schema >= 95173) {
+	if (SCHEMA >= 100038) {
 		strlcpy(iconids_yaml, datadir, BUFLEN);
 		strlcat(iconids_yaml, "iconIDs.yaml", BUFLEN);
 		if (ACCESS(iconids_yaml, 0) != 0) {
@@ -215,7 +232,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	if (schema >= 95173) {
+	if (SCHEMA >= 100038) {
 		strlcpy(typeids_yaml, datadir, BUFLEN);
 		strlcat(typeids_yaml, "typeIDs.yaml", BUFLEN);
 		if (ACCESS(typeids_yaml, 0) != 0) {
@@ -225,7 +242,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	if (schema >= 95173) {
+	if (SCHEMA >= 100038) {
 		strlcpy(udd_sql3, datadir, BUFLEN);
 		strlcat(udd_sql3, "universeDataDx.db", BUFLEN);
 		if (ACCESS(udd_sql3, 0) != 0) {
@@ -235,23 +252,33 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
+	if (SCHEMA >= 100038) {
+		strlcpy(blueprints_yaml, datadir, BUFLEN);
+		strlcat(blueprints_yaml, "blueprints.yaml", BUFLEN);
+		if (ACCESS(blueprints_yaml, 0) != 0) {
+			printf("err\n");
+			fprintf(stderr, "could not access %s\n", blueprints_yaml);
+			return 1;
+		}
+	}
+
 	printf("OK\n");
 
 	// validate output
-	if (outdir == NULL) {
-		outdir = (char *)malloc(2 * BUFLEN);
-		strlcpy(outdir, datadir, 2 * BUFLEN);
-		strlcat(outdir, SDD, 2* BUFLEN);
-		strlcat(outdir, SZPATHSEP, 2 * BUFLEN);
+	if (JSON_DIR == NULL) {
+		JSON_DIR = (char *)malloc(2 * BUFLEN);
+		strlcpy(JSON_DIR, datadir, 2 * BUFLEN);
+		strlcat(JSON_DIR, SDD, 2* BUFLEN);
+		strlcat(JSON_DIR, SZPATHSEP, 2 * BUFLEN);
 	}
-	printf("checking output: %s - ", outdir);
-	if (ACCESS(outdir, 0) != 0) {
-		if (MKDIR(outdir) != 0) {
+	printf("checking output: %s - ", JSON_DIR);
+	if (ACCESS(JSON_DIR, 0) != 0) {
+		if (MKDIR(JSON_DIR) != 0) {
 			printf("err\n");
 			fprintf(stderr, "could not create output path\n");
 			return 1;
 		}
-		if (ACCESS(outdir, 0) != 0) {
+		if (ACCESS(JSON_DIR, 0) != 0) {
 			printf("err\n");
 			fprintf(stderr, "could not access output path\n");
 			return 1;
@@ -262,8 +289,8 @@ int main(int argc, char* argv[]) {
 	// connect to SQLLITE dbs
 	printf("connecting to [%s] - ", udd_sql3);
 
-	db3_rc = sqlite3_open(udd_sql3, &udd_db3);
-	if (SQLITE_OK != db3_rc) return dump_db3_error(henv, hdbc, udd_db3);
+	db3_rc = sqlite3_open(udd_sql3, &DB3_UD);
+	if (SQLITE_OK != db3_rc) return dump_db3_error(DB3_UD, 1);
 	printf("OK\n");
 
 	// connect to SQL server
@@ -275,74 +302,120 @@ int main(int argc, char* argv[]) {
 	}
 	printf("connecting to [%s\\%s] using [%s] - ", hostname, dbinst, auth);
 
-	ret = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HENV, &henv);
-	if (!SQL_SUCCEEDED(ret)) return dump_sql_error(henv, hdbc, udd_db3, ret, SQL_HANDLE_ENV, henv);
-	ret = SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0);
-	if (!SQL_SUCCEEDED(ret)) return dump_sql_error(henv, hdbc, udd_db3, ret, SQL_HANDLE_ENV, henv);
+	ret = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HENV, &H_ENV);
+	if (!SQL_SUCCEEDED(ret)) return dump_sql_error(ret, SQL_HANDLE_ENV, H_ENV, 1);
+	ret = SQLSetEnvAttr(H_ENV, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3_80, 0);
+	if (!SQL_SUCCEEDED(ret)) return dump_sql_error(ret, SQL_HANDLE_ENV, H_ENV, 1);
 
 	if (dblist > 0) {
 		printf("list drivers\n");
-		unsigned short ret = check_drivers(henv, 1);
-		close_handles(henv, hdbc, udd_db3);
+		unsigned short ret = check_drivers(1);
+		close_handles();
 		return ret;
 	}
 
-	if (0 != check_drivers(henv, 0)) {
+	if (0 != check_drivers(0)) {
 		printf("err\n");
 		fprintf(stderr, "SQL server driver not found\n");
-		close_handles(henv, hdbc, udd_db3);
+		close_handles();
 		return 1;
 	}
 
-	ret = SQLAllocHandle(SQL_HANDLE_DBC, henv, &hdbc);
-	if (!SQL_SUCCEEDED(ret)) return dump_sql_error(henv, hdbc, udd_db3, ret, SQL_HANDLE_ENV, henv);
+	ret = SQLAllocHandle(SQL_HANDLE_DBC, H_ENV, &H_DBC);
+	if (!SQL_SUCCEEDED(ret)) return dump_sql_error(ret, SQL_HANDLE_ENV, H_ENV, 1);
+	ret = SQLAllocHandle(SQL_HANDLE_DBC, H_ENV, &H_DBC2);
+	if (!SQL_SUCCEEDED(ret)) return dump_sql_error(ret, SQL_HANDLE_ENV, H_ENV, 1);
 
 	SNPRINTF(dsn, BUFLEN, "Driver={%s};Server=%s\\%s;Database=%s;%s;", SQLDRV, hostname, dbinst, dbname, auth);
-	ret = SQLDriverConnect(hdbc, NULL, dsn, strnlen(dsn, BUFLEN), connStrOut, BUFLEN, &connStrLen, SQL_DRIVER_NOPROMPT);
-	if (!SQL_SUCCEEDED(ret)) return dump_sql_error(henv, hdbc, udd_db3, ret, SQL_HANDLE_DBC, hdbc);
+	ret = SQLDriverConnect(H_DBC, NULL, dsn, strnlen(dsn, BUFLEN), connStrOut, BUFLEN, &connStrLen, SQL_DRIVER_NOPROMPT);
+	if (!SQL_SUCCEEDED(ret)) return dump_sql_error(ret, SQL_HANDLE_DBC, H_DBC, 1);
+	ret = SQLDriverConnect(H_DBC2, NULL, dsn, strnlen(dsn, BUFLEN), connStrOut, BUFLEN, &connStrLen, SQL_DRIVER_NOPROMPT);
+	if (!SQL_SUCCEEDED(ret)) return dump_sql_error(ret, SQL_HANDLE_DBC, H_DBC2, 1);
 
 	printf("OK\n");
 
 	// create metainfo file
 	char metafile[BUFLEN] = NULLSTR;
-	strlcpy(metafile, outdir, BUFLEN);
+	strlcpy(metafile, JSON_DIR, BUFLEN);
 	strlcat(metafile, "metainf.json", BUFLEN);
-	printf("creating %s - ", metafile);
 	FILE *f = fopen(metafile, "w");
 	if (f == NULL) {
 		printf("err\n");
-		fprintf(stderr, "error opening file");
-		close_handles(henv, hdbc, udd_db3);
+		fprintf(stderr, "error opening meta file: %s", metafile);
+		close_handles();
 		return 1;
 	}
 	printf("OK\n");
 	fprintf(f, "{\n");
-	fprintf(f, "\"formatID\":1,\n");
-	fprintf(f, "\"schema\":%d,\n", schema);
+	fprintf(f, "\"formatID\":%d,\n", FORMAT_ID);
+	fprintf(f, "\"schema\":%d,\n", SCHEMA);
 	fprintf(f, "\"copy\":\"%s\",\n", CCPR);
 	fprintf(f, "\"version\":%d,\n", version);
 	fprintf(f, "\"verdesc\":\"%s\",\n", verdesc);
-	fprintf(f, "\"tables\":{\n", verdesc);
+	fprintf(f, "\"tables\":{\n");
 
 	// do stuff
 	int rc = 0;
+	int comma = 0;
 
-	rc = create_map(outdir, schema, udd_db3, f);
-	if (0 != rc) {
-		if (rc > 1) dump_db3_error(henv, hdbc, udd_db3);
-		else close_handles(henv, hdbc, udd_db3);
-		fclose(f);
-		return 1;
+	if (NULL == prefix || strncmp(prefix, "crp", 3) == 0) {
+		if (comma++ > 0) fprintf(f, ",\n");
+		rc = create_crp(f);
+		if (rc != 0) {
+			close_handles();
+			fclose(f);
+			return 1;
+		}
 	}
 
-	fprintf(f, ",\n");
-	
-	rc = create_inv(outdir, schema, hdbc, f);
-	if (0 != rc) {
-		if (rc > 1) dump_db3_error(henv, hdbc, udd_db3);
-		else close_handles(henv, hdbc, udd_db3);
-		fclose(f);
-		return 1;
+	if (NULL == prefix || strncmp(prefix, "dgm", 3) == 0) {
+		if (comma++ > 0) fprintf(f, ",\n");
+		rc = create_dgm(f, cert_yaml);
+		if (rc != 0) {
+			close_handles();
+			fclose(f);
+			return 1;
+		}
+	}
+
+	if (NULL == prefix || strncmp(prefix, "inv", 3) == 0) {
+		if (comma++ > 0) fprintf(f, ",\n");
+		rc = create_inv(f, typeids_yaml, iconids_yaml);
+		if (rc != 0) {
+			close_handles();
+			fclose(f);
+			return 1;
+		}
+	}
+
+	if (NULL == prefix || strncmp(prefix, "map", 3) == 0) {
+		if (comma++ > 0) fprintf(f, ",\n");
+		rc = create_map(f);
+		if (0 != rc) {
+			close_handles();
+			fclose(f);
+			return 1;
+		}
+	}
+
+	if (NULL == prefix || strncmp(prefix, "ram", 3) == 0) {
+		if (comma++ > 0) fprintf(f, ",\n");
+		ret = create_ram(f, blueprints_yaml);
+		if (!SQL_SUCCEEDED(ret)) {
+			close_handles();
+			fclose(f);
+			return 1;
+		}
+	}
+
+	if (NULL == prefix || strncmp(prefix, "sta", 3) == 0) {
+		if (comma++ > 0) fprintf(f, ",\n");
+		ret = create_sta(f);
+		if (!SQL_SUCCEEDED(ret)) {
+			close_handles();
+			fclose(f);
+			return 1;
+		}
 	}
 
 	fprintf(f, "\n}\n"); // end of sources
@@ -350,13 +423,21 @@ int main(int argc, char* argv[]) {
 	// clean up connections
 	fprintf(f, "}\n");
 	fclose(f);
-	post_file(outdir, "metainf");
+	printf("metainf - ", metafile);
+	post_file("metainf");
 
-	close_handles(henv, hdbc, udd_db3);
+	close_handles();
+
+	free(datadir);
+	free(verdesc);
+	free(verstr);
+	free(prefix);
+	free(JSON_DIR);
+
+	printf("\nall done!\n");
 
 	return 0;
 }
-
 
 void clean_string(char *buf, int siz) {
 	char *tmp = (char *)malloc(siz + 1);
@@ -417,14 +498,17 @@ unsigned int dump_usage(void) {
 	printf("\t-u username: SQL login username\n\t\tif not provided, trusted auth attempted for current user\n");
 	printf("\t-p password: SQL login password\n");
 	printf("\t-D: list available DB drivers\n");
+	printf("\t-D: list available DB drivers\n");
 	printf("\t-v: version information\n");
+	printf("\t-x: specify a specific prefix to create (none specified == all)\n");
+	printf("\t-X: list available prefixes\n");
 	printf("\t-P: disable JSONP creation\n");
 	printf("\t-Z: disable gzip creation\n");
 	printf("\t-?: print this usage page\n");
 	return 1;
 }
 
-unsigned short check_drivers(SQLHENV henv, unsigned short dump) {
+unsigned short check_drivers(unsigned short dump) {
 	SQLUSMALLINT dir = SQL_FETCH_FIRST;
 	char driver[BUFLEN + 1];
 	SQLSMALLINT driver_ret;
@@ -433,7 +517,7 @@ unsigned short check_drivers(SQLHENV henv, unsigned short dump) {
 	SQLRETURN ret;
 	unsigned short found = 0;
 
-	while (SQL_SUCCEEDED(ret = SQLDrivers(henv, dir, driver, sizeof(driver), &driver_ret, attr, sizeof(attr), &attr_ret))) {
+	while (SQL_SUCCEEDED(ret = SQLDrivers(H_ENV, dir, driver, sizeof(driver), &driver_ret, attr, sizeof(attr), &attr_ret))) {
 		dir = SQL_FETCH_NEXT;
 		if (1 == dump) {
 			printf("%s - %s\n", driver, attr);
@@ -448,26 +532,31 @@ unsigned short check_drivers(SQLHENV henv, unsigned short dump) {
 	return (0 == dump && 0 == found);
 }
 
-void close_handles(SQLHENV henv, SQLHDBC hdbc, sqlite3 *udd_db3) {
-	if (SQL_NULL_HDBC != hdbc) {
-		SQLDisconnect(hdbc);
-		SQLFreeConnect(hdbc);
+void close_handles() {
+	if (SQL_NULL_HDBC != H_DBC) {
+		SQLDisconnect(H_DBC);
+		SQLFreeConnect(H_DBC);
 	}
-	if (SQL_NULL_HENV != henv) {
-		SQLFreeEnv(henv);
+	if (SQL_NULL_HDBC != H_DBC2) {
+		SQLDisconnect(H_DBC2);
+		SQLFreeConnect(H_DBC2);
 	}
-	if (NULL != udd_db3) {
-		sqlite3_close(udd_db3);
+	if (SQL_NULL_HENV != H_ENV) {
+		SQLFreeEnv(H_ENV);
+	}
+	if (NULL != DB3_UD) {
+		sqlite3_close(DB3_UD);
 	}
 }
 
-int dump_sql_error(SQLHENV henv, SQLHDBC hdbc, sqlite3 *udd_db3, SQLRETURN retcode, SQLSMALLINT type, SQLHANDLE hsql) {
+int dump_sql_error(SQLRETURN retcode, SQLSMALLINT type, SQLHANDLE hsql, unsigned int statflag) {
 	SQLCHAR SqlState[6], Msg[SQL_MAX_MESSAGE_LENGTH];
 	SQLINTEGER error;
 	SQLSMALLINT len;
 	SQLRETURN rc;
+
+	if (statflag > 0) printf("err\n");
 	rc = SQLGetDiagRec(type, hsql, 1, SqlState, &error, Msg, SQL_MAX_MESSAGE_LENGTH, &len);
-	printf("err\n");
 	if (rc != SQL_NO_DATA) {
 		if (len >= SQL_MAX_MESSAGE_LENGTH) {
 			Msg[SQL_MAX_MESSAGE_LENGTH] = '\0';
@@ -481,14 +570,15 @@ int dump_sql_error(SQLHENV henv, SQLHDBC hdbc, sqlite3 *udd_db3, SQLRETURN retco
 		fprintf(stderr, "SQL error: %d\n", retcode);
 	}
 
-	close_handles(henv, hdbc, udd_db3);
+	close_handles();
 
 	return 1;
 }
 
-int dump_db3_error(SQLHENV henv, SQLHDBC hdbc, sqlite3 *udd_db3) {
-	fprintf(stderr, "DB3 error: %s\n", sqlite3_errmsg(udd_db3));
-	close_handles(henv, hdbc, udd_db3);
+int dump_db3_error(sqlite3 *db, unsigned int statflag) {
+	if (statflag > 0) printf("err\n");
+	fprintf(stderr, "DB3 error: %s\n", sqlite3_errmsg(db));
+	close_handles();
 	return 1;
 }
 
@@ -516,7 +606,7 @@ void sql_column_text(char *buf, SQLHSTMT stmt, SQLUSMALLINT col, unsigned int si
 		clean_string(buf, siz);
 	}
 	else {
-		buf[0] = 0;
+		buf[0] = '\0';
 	}
 }
 
@@ -528,19 +618,20 @@ SQLSMALLINT sql_column_bit(SQLHSTMT stmt, SQLUSMALLINT col) {
 	return 0 == buf ? 0 : 1;
 }
 
-unsigned int post_file(const char *outdir, const char *filetag) {
+unsigned int post_file(const char *filetag) {
 	char jsonfile[BUFLEN] = NULLSTR;
 	char jsonfilegz[BUFLEN] = NULLSTR;
 	char jsonpfile[BUFLEN] = NULLSTR;
 	char jsonpfilegz[BUFLEN] = NULLSTR;
 	unsigned char filebuf[32768];
 
-	SNPRINTF(jsonfile, BUFLEN, "%s%s.json\0", outdir, filetag);
-	SNPRINTF(jsonfilegz, BUFLEN, "%s%s.json.gz\0", outdir, filetag);
-	SNPRINTF(jsonpfile, BUFLEN, "%s%s.jsonp\0", outdir, filetag);
-	SNPRINTF(jsonpfilegz, BUFLEN, "%s%s.jsonp.gz\0", outdir, filetag);
+	SNPRINTF(jsonfile, BUFLEN, "%s%s.json\0", JSON_DIR, filetag);
+	SNPRINTF(jsonfilegz, BUFLEN, "%s%s.json.gz\0", JSON_DIR, filetag);
+	SNPRINTF(jsonpfile, BUFLEN, "%s%s.jsonp\0", JSON_DIR, filetag);
+	SNPRINTF(jsonpfilegz, BUFLEN, "%s%s.jsonp.gz\0", JSON_DIR, filetag);
 
-	printf("post process %s - ", filetag);
+	// printf("post process %s - ", filetag);
+	printf("post process - ");
 	
 	if (ACCESS(jsonfile, 0) != 0) {
 		printf("err\n");
@@ -615,4 +706,142 @@ unsigned int post_file(const char *outdir, const char *filetag) {
 	printf("OK\n");
 
 	return 0;
+}
+
+int yaml_json_mapping(FILE *f, yaml_document_t *ydoc, yaml_node_t *node) {
+	yaml_node_t *bufnode;
+	yaml_node_pair_t *pair;
+	int first = 1;
+	int quoted = 1;
+	char *key = NULL;
+	
+	if (!node || node->type != YAML_MAPPING_NODE) {
+		fprintf(f, "null");
+		return 0;
+	}
+
+	fprintf(f, "{");
+	for (pair = node->data.mapping.pairs.start; pair < node->data.mapping.pairs.top; pair++) {
+		// get the key node for current pair; should be a scalar we'll use for property name
+		bufnode = yaml_document_get_node(ydoc, pair->key);
+		if (!bufnode || bufnode->type != YAML_SCALAR_NODE) continue;
+		if (!first) fprintf(f, ",");
+		first = 0;
+		key = bufnode->data.scalar.value;
+		fprintf(f, "\"%s\":", key);
+
+		bufnode = yaml_document_get_node(ydoc, pair->value);
+		if (!bufnode) fprintf(f, "null");
+		else if (bufnode->type == YAML_SCALAR_NODE) {
+			// a number of properties don't need quoting as they are always numeric or otherwise base types
+			quoted = 1;
+			if (strncmp(key, "time", 4) == 0) quoted = 0;
+			else if (strncmp(key, "level", 5) == 0) quoted = 0;
+			else if (strncmp(key, "iconID", 6) == 0) quoted = 0;
+			else if (strncmp(key, "radius", 6) == 0) quoted = 0;
+			else if (strncmp(key, "consume", 7) == 0) quoted = 0;
+			else if (strncmp(key, "soundID", 7) == 0) quoted = 0;
+			else if (strncmp(key, "quantity", 8) == 0) quoted = 0;
+			else if (strncmp(key, "graphicID", 9) == 0) quoted = 0;
+			else if (strncmp(key, "probability", 11) == 0) quoted = 0;
+
+			if (quoted > 0) fprintf(f, "\"%s\"", bufnode->data.scalar.value);
+			else fprintf(f, "%s", bufnode->data.scalar.value);
+		}
+		else if (bufnode->type == YAML_MAPPING_NODE) yaml_json_mapping(f, ydoc, bufnode);
+		else if (bufnode->type == YAML_SEQUENCE_NODE) yaml_json_sequence(f, ydoc, bufnode);
+	}
+	fprintf(f, "}");
+
+	return 0;
+}
+
+int yaml_json_sequence(FILE *f, yaml_document_t *ydoc, yaml_node_t *node) {
+	yaml_node_t *bufnode;
+	yaml_node_item_t *item;
+	int first = 1;
+
+	if (!node || node->type != YAML_SEQUENCE_NODE) {
+		fprintf(f, "null");
+		return 0;
+	}
+
+	fprintf(f, "[");
+	for (item = node->data.sequence.items.start; item < node->data.sequence.items.top; item++) {
+		// get the key node for current pair; should be a scalar we'll use for property name
+		bufnode = yaml_document_get_node(ydoc, *item);
+		if (!first) fprintf(f, ",");
+		first = 0;
+		if (!bufnode) fprintf(f, "null");
+		else if (bufnode->type == YAML_SCALAR_NODE) fprintf(f, "\"%s\"", bufnode->data.scalar.value);
+		else if (bufnode->type == YAML_MAPPING_NODE) yaml_json_mapping(f, ydoc, bufnode);
+		else if (bufnode->type == YAML_SEQUENCE_NODE) yaml_json_sequence(f, ydoc, bufnode);
+		else fprintf(f, "null");
+	}
+	fprintf(f, "]");
+
+	return 0;
+}
+
+FILE* open_datafile(const char *name) {
+	char jsonfile[BUFLEN] = NULLSTR;
+	FILE *f = NULL;
+
+	SNPRINTF(jsonfile, BUFLEN, "%s%s.json", JSON_DIR, name);
+	printf("%s - ", name);
+	f = fopen(jsonfile, "w");
+	if (f == NULL) {
+		printf("err\n");
+		fprintf(stderr, "error opening file for write: %s\n", jsonfile);
+		return NULL;
+	}
+	fprintf(f, "{\n");
+	fprintf(f, "\"formatID\":%d,\n", FORMAT_ID);
+	fprintf(f, "\"schema\":%u,\n", SCHEMA);
+	fprintf(f, "\"copy\":\"%s\",\n", CCPR);
+	fprintf(f, "\"tables\":{\n");
+	fflush(f);
+
+	return f;
+}
+
+unsigned int close_datafile(const char *name, FILE *f) {
+	fprintf(f, "\n}\n}\n");
+	fclose(f);
+	// printf("OK\n");
+	return post_file(name);
+}
+
+FILE* open_segment(const char *name, unsigned int segment) {
+	char jsonfile[BUFLEN] = NULLSTR;
+	FILE *f = NULL;
+
+	SNPRINTF(jsonfile, BUFLEN, "%s%s_%02u.json", JSON_DIR, name, segment);
+	printf("%s_%02u - ", name, segment);
+	f = fopen(jsonfile, "w");
+	if (f == NULL) {
+		printf("err\n");
+		fprintf(stderr, "error opening file for write: %s\n", jsonfile);
+		return NULL;
+	}
+	fprintf(f, "{\n");
+	fprintf(f, "\"formatID\":%d,\n", FORMAT_ID);
+	fprintf(f, "\"schema\":%u,\n", SCHEMA);
+	fprintf(f, "\"copy\":\"%s\",\n", CCPR);
+	fprintf(f, "\"tables\":{\n");
+	fprintf(f, "\"%s\":{\n", name);
+	fprintf(f, "\"d\":{\n");
+	fflush(f);
+
+	return f;
+}
+
+unsigned int close_segment(const char *name, unsigned int segment, FILE *f) {
+	char jsonfile[BUFLEN] = NULLSTR;
+	SNPRINTF(jsonfile, BUFLEN, "%s_%02u", name, segment);
+
+	fprintf(f, "\n}\n}\n}\n}\n");
+	fclose(f);
+	// printf("OK\n");
+	return post_file(jsonfile);
 }

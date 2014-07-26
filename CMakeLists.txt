@@ -44,9 +44,9 @@ endif()
 
 include_directories(${ODBC_INCLUDE_DIR} "${sdd2json_SOURCE_DIR}/libs")
 
-add_executable(sdd2json libs/getopt.c libs/strlcat.c libs/strlcpy.c compat.h sdd2json.h sdd2json.c map.h map.c inv.h inv.c)
+add_executable(sdd2json libs/getopt.c libs/strlcat.c libs/strlcpy.c compat.h sdd2json.h sdd2json.c crp.c dgm.c inv.c map.c ram.c sta.c)
 if(WIN32)
-	set_target_properties(sdd2json PROPERTIES COMPILE_FLAGS "/D_CRT_SECURE_NO_WARNINGS /D_USING_V110_SDK71_=1")
+	set_target_properties(sdd2json PROPERTIES COMPILE_FLAGS "/D_CRT_SECURE_NO_WARNINGS /D_USING_V110_SDK71_=1 /DYAML_DECLARE_STATIC /DHAVE_CONFIG_H /DMAX_WBITS=15 /DMAX_MEM_LEVEL=9")
 endif()
 #if(MSVC)
 #	set_target_properties(sdd2json PROPERTIES COMPILE_FLAGS "/Za")
