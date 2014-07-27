@@ -35,6 +35,7 @@ unsigned int create_crp(FILE *mf) {
 unsigned int create_crpActivities(FILE *mf, FILE *f) {
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[1001];
 
 	// meta
@@ -42,8 +43,7 @@ unsigned int create_crpActivities(FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"crpData\",\n");
 	fprintf(mf, "\"c\":[\"activityName\",\"description\"],\n");
 	fprintf(mf, "\"k\":\"activityID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"crpActivities\":{\n");
@@ -62,9 +62,12 @@ unsigned int create_crpActivities(FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -72,6 +75,7 @@ unsigned int create_crpActivities(FILE *mf, FILE *f) {
 unsigned int create_crpNPCDivisions(FILE *mf, FILE *f) {
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[1001];
 
 	// meta
@@ -79,8 +83,7 @@ unsigned int create_crpNPCDivisions(FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"crpData\",\n");
 	fprintf(mf, "\"c\":[\"divisionName\",\"description\",\"leaderType\"],\n");
 	fprintf(mf, "\"k\":\"divisionID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"crpNPCDivisions\":{\n");
@@ -101,9 +104,12 @@ unsigned int create_crpNPCDivisions(FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -113,6 +119,7 @@ unsigned int create_crpNPCCorporations(FILE *mf, FILE *f) {
 	SQLHSTMT stmt;
 	SQLHSTMT substmt;
 	SQLINTEGER ID = 0;
+	unsigned int count = 0;
 	char sql[BUFLEN] = NULLSTR;
 	char txtbuf[4001];
 
@@ -122,8 +129,7 @@ unsigned int create_crpNPCCorporations(FILE *mf, FILE *f) {
 	fprintf(mf, "\"c\":[\"size\",\"extent\",\"solarSystemID\",\"investorID1\",\"investorShares1\",\"investorID2\",\"investorShares2\",\"investorID3\",\"investorShares3\",\"investorID4\",\"investorShares4\",\"friendID\",\"enemyID\",\"publicShares\",\"initialPrice\",\"minSecurity\",\"scattered\",\"fringe\",\"corridor\",\"hub\",\"border\",\"factionID\",\"sizeFactor\",\"stationCount\",\"stationSystemCount\",\"description\",\"iconID\",\"corpName\",\"divisions\",\"research\",\"trades\"],\n");
 	fprintf(mf, "\"k\":\"corporationID\",\n");
 	fprintf(mf, "\"m\":{\"divisions\":\"{ divisionID: divisionSize, ... }\",\"research\":\"[ skillID, ... ]\",\"trades\":\"[ typeID, ... ]\"},\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"crpNPCCorporations\":{\n");
@@ -225,12 +231,15 @@ unsigned int create_crpNPCCorporations(FILE *mf, FILE *f) {
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
 
+	fprintf(mf, "\"l\":%u\n}", count);
+
 	return 0;
 }
 
 unsigned int create_agtAgentTypes(FILE *mf, FILE *f) {
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[51];
 
 	// meta
@@ -238,8 +247,7 @@ unsigned int create_agtAgentTypes(FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"crpData\",\n");
 	fprintf(mf, "\"c\":[\"agentType\"],\n");
 	fprintf(mf, "\"k\":\"agentTypeID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"agtAgentTypes\":{\n");
@@ -256,9 +264,12 @@ unsigned int create_agtAgentTypes(FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -268,6 +279,7 @@ unsigned int create_agtAgents(FILE *mf, FILE *f) {
 	SQLHSTMT stmt;
 	SQLHSTMT substmt;
 	SQLINTEGER ID = 0;
+	unsigned int count = 0;
 	char sql[BUFLEN] = NULLSTR;
 
 	// meta
@@ -276,8 +288,7 @@ unsigned int create_agtAgents(FILE *mf, FILE *f) {
 	fprintf(mf, "\"c\":[\"divisionID\",\"corporationID\",\"locationID\",\"level\",\"quality\",\"agentTypeID\",\"isLocator\",\"research\"],\n");
 	fprintf(mf, "\"k\":\"agentID\",\n");
 	fprintf(mf, "\"m\":{\"research\":\"[ typeID, ... ]\"},\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"agtAgents\":{\n");
@@ -317,9 +328,12 @@ unsigned int create_agtAgents(FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }

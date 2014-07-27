@@ -121,6 +121,7 @@ unsigned int create_map(FILE *mf) {
 unsigned int create_mapLandmarks(FILE *mf, FILE *f) {
 	int rc = 0;
 	sqlite3_stmt *stmt = NULL;
+	unsigned int count = 0;
 	char txtbuf[7001];
 
 	// meta
@@ -128,8 +129,7 @@ unsigned int create_mapLandmarks(FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"mapKSpace\",\n");
 	fprintf(mf, "\"c\":[\"landmarkName\",\"description\",\"locationID\",\"x\",\"y\",\"z\",\"iconID\"],\n");
 	fprintf(mf, "\"k\":\"landmarkID\",\n");
-	fprintf(mf, "\"t\":\"db3\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"db3\",\n");
 
 	// data
 	fprintf(f, "\"mapLandmarks\":{\n");
@@ -151,9 +151,12 @@ unsigned int create_mapLandmarks(FILE *mf, FILE *f) {
 		rc = sqlite3_step(stmt);
 		if (SQLITE_ROW == rc) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	rc = sqlite3_finalize(stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -161,6 +164,7 @@ unsigned int create_mapLandmarks(FILE *mf, FILE *f) {
 unsigned int create_mapRegions(FILE *mf, FILE *f, char space) {
 	int rc = 0;
 	sqlite3_stmt *stmt = NULL;
+	unsigned int count = 0;
 	char txtbuf[101];
 	char *sql = NULL;
 
@@ -169,8 +173,7 @@ unsigned int create_mapRegions(FILE *mf, FILE *f, char space) {
 	fprintf(mf, "\"j\":\"map%cSpace\",\n", space);
 	fprintf(mf, "\"c\":[\"regionName\",\"x\",\"y\",\"z\",\"xMin\",\"xMax\",\"yMin\",\"yMax\",\"zMin\",\"zMax\",\"factionID\",\"radius\",\"graphicID\",\"wormholeClassID\"],\n");
 	fprintf(mf, "\"k\":\"regionID\",\n");
-	fprintf(mf, "\"t\":\"db3\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"db3\",\n");
 
 	// data
 	fprintf(f, "\"map%cRegions\":{\n", space);
@@ -201,9 +204,12 @@ unsigned int create_mapRegions(FILE *mf, FILE *f, char space) {
 		rc = sqlite3_step(stmt);
 		if (SQLITE_ROW == rc) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	rc = sqlite3_finalize(stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -211,6 +217,7 @@ unsigned int create_mapRegions(FILE *mf, FILE *f, char space) {
 unsigned int create_mapConstellations(FILE *mf, FILE *f, char space) {
 	int rc = 0;
 	sqlite3_stmt *stmt = NULL;
+	unsigned int count = 0;
 	char txtbuf[101];
 	char *sql = NULL;
 
@@ -219,8 +226,7 @@ unsigned int create_mapConstellations(FILE *mf, FILE *f, char space) {
 	fprintf(mf, "\"j\":\"map%cSpace\",\n", space);
 	fprintf(mf, "\"c\":[\"regionID\",\"constellationName\",\"x\",\"y\",\"z\",\"xMin\",\"xMax\",\"yMin\",\"yMax\",\"zMin\",\"zMax\",\"factionID\",\"radius\",\"wormholeClassID\"],\n");
 	fprintf(mf, "\"k\":\"constellationID\",\n");
-	fprintf(mf, "\"t\":\"db3\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"db3\",\n");
 
 	// data
 	fprintf(f, "\"map%cConstellations%s\":{\n", space);
@@ -251,15 +257,19 @@ unsigned int create_mapConstellations(FILE *mf, FILE *f, char space) {
 		rc = sqlite3_step(stmt);
 		if (SQLITE_ROW == rc) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	rc = sqlite3_finalize(stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
 
 unsigned int create_mapSolarSystemJumps(FILE *mf, FILE *f, char space) {
 	int rc = 0;
+	unsigned int count = 0;
 	sqlite3_stmt *stmt = NULL;
 	sqlite3_int64 prev_from = 0;
 	sqlite3_int64 fromID = 0;
@@ -270,8 +280,7 @@ unsigned int create_mapSolarSystemJumps(FILE *mf, FILE *f, char space) {
 	fprintf(mf, "\"j\":\"map%cSpace\",\n", space);
 	fprintf(mf, "\"c\":[\"fromRegionID\",\"fromConstellationID\",\"toConstellationID\",\"toRegionID\"],\n");
 	fprintf(mf, "\"k\":\"fromSolarSystemID:toSolarSystemID\",\n");
-	fprintf(mf, "\"t\":\"db3\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"db3\",\n");
 
 	// data
 	fprintf(f, "\"map%cSolarSystemJumps\":{\n", space);
@@ -289,6 +298,7 @@ unsigned int create_mapSolarSystemJumps(FILE *mf, FILE *f, char space) {
 			}
 			fprintf(f, "\"%lld\":{\n\"%lld\":[", fromID, toID);
 			prev_from = fromID;
+			count++;
 		}
 		else {
 			fprintf(f, ",\n\"%lld\":[", toID);
@@ -304,12 +314,15 @@ unsigned int create_mapSolarSystemJumps(FILE *mf, FILE *f, char space) {
 	rc = sqlite3_finalize(stmt);
 	fprintf(f, "}\n}");
 
+	fprintf(mf, "\"l\":%u\n}", count);
+
 	return 0;
 }
 
 unsigned int create_mapSolarSystems(FILE *mf, FILE *f, char space) {
 	int rc = 0;
 	sqlite3_stmt *stmt = NULL;
+	unsigned int count = 0;
 	char txtbuf[101];
 	char *sql = NULL;
 	sqlite3_int64 solarSystemID;
@@ -319,8 +332,7 @@ unsigned int create_mapSolarSystems(FILE *mf, FILE *f, char space) {
 	fprintf(mf, "\"j\":\"map%cSpace\",\n", space);
 	fprintf(mf, "\"c\":[\"regionID\",\"constellationID\",\"solarSystemName\",\"x\",\"y\",\"z\",\"xMin\",\"xMax\",\"yMin\",\"yMax\",\"zMin\",\"zMax\",\"luminosity\",\"border\",\"fringe\",\"corridor\",\"hub\",\"international\",\"regional\",\"constellation\",\"contiguous\",\"security\",\"factionID\",\"radius\",\"sunTypeID\",\"securityClass\",\"wormholeClassID\",\"stationCount\"],\n");
 	fprintf(mf, "\"k\":\"solarSystemID\",\n");
-	fprintf(mf, "\"t\":\"db3\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"db3\",\n");
 
 	// data
 	fprintf(f, "\"map%cSolarSystems\":{\n", space);
@@ -368,15 +380,19 @@ unsigned int create_mapSolarSystems(FILE *mf, FILE *f, char space) {
 		rc = sqlite3_step(stmt);
 		if (SQLITE_ROW == rc) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	rc = sqlite3_finalize(stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
 
 unsigned int create_mapRegionJumps(FILE *mf, FILE *f) {
 	int rc = 0;
+	unsigned int count = 0;
 	sqlite3_stmt *stmt = NULL;
 	sqlite3_int64 prev_from = 0;
 	sqlite3_int64 fromID = 0;
@@ -387,8 +403,7 @@ unsigned int create_mapRegionJumps(FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"mapJumps\",\n");
 	fprintf(mf, "\"c\":[],\n");
 	fprintf(mf, "\"k\":\"fromRegionID:toRegionID\",\n");
-	fprintf(mf, "\"t\":\"db3\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"db3\",\n");
 
 	// data
 	fprintf(f, "\"mapRegionJumps\":{\n");
@@ -406,6 +421,7 @@ unsigned int create_mapRegionJumps(FILE *mf, FILE *f) {
 			}
 			fprintf(f, "\"%lld\":{\n\"%lld\":[", fromID, toID);
 			prev_from = fromID;
+			count++;
 		}
 		else {
 			fprintf(f, ",\n\"%lld\":[", toID);
@@ -417,11 +433,14 @@ unsigned int create_mapRegionJumps(FILE *mf, FILE *f) {
 	rc = sqlite3_finalize(stmt);
 	fprintf(f, "}\n}");
 
+	fprintf(mf, "\"l\":%u\n}", count);
+
 	return 0;
 }
 
 unsigned int create_mapConstellationJumps(FILE *mf, FILE *f) {
 	int rc = 0;
+	unsigned int count = 0;
 	sqlite3_stmt *stmt = NULL;
 	sqlite3_int64 prev_from = 0;
 	sqlite3_int64 fromID = 0;
@@ -432,8 +451,7 @@ unsigned int create_mapConstellationJumps(FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"mapJumps\",\n");
 	fprintf(mf, "\"c\":[\"fromRegionID\",\"toRegionID\"],\n");
 	fprintf(mf, "\"k\":\"fromConstellationID:toConstellationID\",\n");
-	fprintf(mf, "\"t\":\"db3\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"db3\",\n");
 
 	// data
 	fprintf(f, "\"mapConstellationJumps\":{\n");
@@ -451,6 +469,7 @@ unsigned int create_mapConstellationJumps(FILE *mf, FILE *f) {
 			}
 			fprintf(f, "\"%lld\":{\n\"%lld\":[", fromID, toID);
 			prev_from = fromID;
+			count++;
 		}
 		else {
 			fprintf(f, ",\n\"%lld\":[", toID);
@@ -464,11 +483,14 @@ unsigned int create_mapConstellationJumps(FILE *mf, FILE *f) {
 	rc = sqlite3_finalize(stmt);
 	fprintf(f, "}\n}");
 
+	fprintf(mf, "\"l\":%u\n}", count);
+
 	return 0;
 }
 
 unsigned int create_mapJumps(FILE *mf, FILE *f) {
 	int rc = 0;
+	unsigned int count = 0;
 	sqlite3_stmt *stmt = NULL;
 
 	// meta
@@ -476,8 +498,7 @@ unsigned int create_mapJumps(FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"mapJumps\",\n");
 	fprintf(mf, "\"c\":[\"destinationID\"],\n");
 	fprintf(mf, "\"k\":\"stargateID\",\n");
-	fprintf(mf, "\"t\":\"db3\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"db3\",\n");
 
 	// data
 	fprintf(f, "\"mapJumps\":{\n");
@@ -491,9 +512,12 @@ unsigned int create_mapJumps(FILE *mf, FILE *f) {
 		rc = sqlite3_step(stmt);
 		if (SQLITE_ROW == rc) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	rc = sqlite3_finalize(stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -501,14 +525,14 @@ unsigned int create_mapJumps(FILE *mf, FILE *f) {
 unsigned int create_warCombatZoneSystems(FILE *mf, FILE *f) {
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 
 	// meta
 	fprintf(mf, "\"warCombatZoneSystems\":{\n");
 	fprintf(mf, "\"j\":\"mapKCelestials\",\n");
 	fprintf(mf, "\"c\":[\"combatZoneID\"],\n");
 	fprintf(mf, "\"k\":\"solarSystemID\",\n");
-	fprintf(mf, "\"t\":\"db3\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"db3\",\n");
 
 	// data
 	fprintf(f, "\"warCombatZoneSystems\":{\n");
@@ -524,9 +548,12 @@ unsigned int create_warCombatZoneSystems(FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -534,6 +561,7 @@ unsigned int create_warCombatZoneSystems(FILE *mf, FILE *f) {
 unsigned int create_warCombatZones(FILE *mf, FILE *f) {
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[501];
 
 	// meta
@@ -541,8 +569,7 @@ unsigned int create_warCombatZones(FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"mapKCelestials\",\n");
 	fprintf(mf, "\"c\":[\"combatZoneName\",\"factionID\",\"centerSystemID\",\"description\"],\n");
 	fprintf(mf, "\"k\":\"combatZoneID\",\n");
-	fprintf(mf, "\"t\":\"db3\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"db3\",\n");
 
 	// data
 	fprintf(f, "\"warCombatZones\":{\n");
@@ -563,9 +590,12 @@ unsigned int create_warCombatZones(FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -573,6 +603,7 @@ unsigned int create_warCombatZones(FILE *mf, FILE *f) {
 unsigned int create_mapCelestials(FILE *mf, FILE *f, char space) {
 	int rc = 0;
 	sqlite3_stmt *stmt = NULL;
+	unsigned int count = 0;
 	char txtbuf[101];
 	char *sql = NULL;
 
@@ -581,8 +612,7 @@ unsigned int create_mapCelestials(FILE *mf, FILE *f, char space) {
 	fprintf(mf, "\"j\":\"map%cCelestials\",\n", space);
 	fprintf(mf, "\"c\":[\"typeID\",\"groupID\",\"solarSystemID\",\"constellationID\",\"regionID\",\"orbitID\",\"x\",\"y\",\"z\",\"radius\",\"itemName\",\"security\",\"celestialIndex\",\"orbitIndex\"],\n");
 	fprintf(mf, "\"k\":\"itemID\",\n");
-	fprintf(mf, "\"t\":\"db3\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"db3\",\n");
 
 	// data; exclude regions, constellations, systems, moons, planets, belts, and gates
 	fprintf(f, "\"map%cCelestials\":{\n", space);
@@ -613,9 +643,12 @@ unsigned int create_mapCelestials(FILE *mf, FILE *f, char space) {
 		rc = sqlite3_step(stmt);
 		if (SQLITE_ROW == rc) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	rc = sqlite3_finalize(stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -625,6 +658,7 @@ unsigned int create_mapDenorm(FILE *mf, char space, const char *tag) {
 	unsigned int segsize = 15000;
 	char jsonfile[BUFLEN] = NULLSTR;
 	int segrc;
+	unsigned int count = 0;
 	sqlite3_int64 minID;
 	sqlite3_int64 maxID;
 	char *condition;
@@ -651,11 +685,12 @@ unsigned int create_mapDenorm(FILE *mf, char space, const char *tag) {
 		minID = -1;
 		maxID = -1;
 		segrc = create_mapDenorm_segment(sf, segment, segsize, &minID, &maxID, condition, space);
-		if (close_segment(jsonfile, segment, sf)) return 1;
+		if (close_segment(jsonfile, segment, sf, segrc)) return 1;
 		fprintf(mf, "[\"%02u\",%lld,%lld]", segment++, minID, maxID);
+		count += segrc;
 	} while (segrc == segsize);
 	if (segrc < 0) return -segrc;
-	fprintf(mf, "\n]\n}");
+	fprintf(mf, "\n],\n\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -665,6 +700,7 @@ unsigned int create_mapCelestialStatistics(FILE *mf, char space) {
 	unsigned int segsize = 15000;
 	char jsonfile[BUFLEN] = NULLSTR;
 	int segrc;
+	unsigned int count = 0;
 	sqlite3_int64 minID;
 	sqlite3_int64 maxID;
 	FILE *sf = NULL;
@@ -685,11 +721,12 @@ unsigned int create_mapCelestialStatistics(FILE *mf, char space) {
 		minID = -1;
 		maxID = -1;
 		segrc = create_mapCelest_segment(sf, segment, segsize, &minID, &maxID, space);
-		if (close_segment(jsonfile, segment, sf)) return 1;
+		if (close_segment(jsonfile, segment, sf, segrc)) return 1;
 		fprintf(mf, "[\"%02u\",%lld,%lld]", segment++, minID, maxID);
+		count += segrc;
 	} while (segrc == segsize);
 	if (segrc < 0) return -segrc;
-	fprintf(mf, "\n]\n}");
+	fprintf(mf, "\n],\n\"l\":%u\n}", count);
 
 	return 0;
 }

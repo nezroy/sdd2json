@@ -34,6 +34,7 @@ unsigned int create_staServices(const char *j, FILE *mf, FILE *f) {
 	const char *tbl = "staServices";
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[1001];
 
 	// meta
@@ -41,8 +42,7 @@ unsigned int create_staServices(const char *j, FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"%s\",\n", j);
 	fprintf(mf, "\"c\":[\"serviceName\",\"description\"],\n");
 	fprintf(mf, "\"k\":\"serviceID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"%s\":{\n", tbl);
@@ -61,9 +61,12 @@ unsigned int create_staServices(const char *j, FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -75,6 +78,7 @@ unsigned int create_staOperations(const char *j, FILE *mf, FILE *f) {
 	SQLHSTMT substmt;
 	SQLINTEGER activityID;
 	SQLINTEGER operationID;
+	unsigned int count = 0;
 	char txtbuf[1001];
 	char sql[BUFLEN] = NULLSTR;
 
@@ -84,8 +88,7 @@ unsigned int create_staOperations(const char *j, FILE *mf, FILE *f) {
 	fprintf(mf, "\"c\":[\"activityID\",\"operationName\",\"decsription\",\"fringe\",\"corridor\",\"hub\",\"border\",\"ratio\",\"caldariStationTypeID\",\"minmatarStationTypeID\",\"amarrStationTypeID\",\"gallenteStationTypeID\",\"joveStationTypeID\",\"services\"],\n");
 	fprintf(mf, "\"k\":\"operationID\",\n");
 	fprintf(mf, "\"m\":{\"services\":\"[ serviceID, ... ]\"},\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"%s\":{\n", tbl);
@@ -133,9 +136,12 @@ unsigned int create_staOperations(const char *j, FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -144,14 +150,14 @@ unsigned int create_staStationTypes(const char *j, FILE *mf, FILE *f) {
 	const char *tbl = "staStationTypes";
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 
 	// meta
 	fprintf(mf, "\"%s\":{\n", tbl);
 	fprintf(mf, "\"j\":\"%s\",\n", j);
 	fprintf(mf, "\"c\":[\"dockEntryX\",\"dockEntryY\",\"dockEntryZ\",\"dockOrientationX\",\"dockOrientationY\",\"dockOrientationZ\",\"operationID\",\"officeSlots\",\"reprocessingEfficiency\",\"conquerable\"],\n");
 	fprintf(mf, "\"k\":\"stationTypeID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"%s\":{\n", tbl);
@@ -177,9 +183,12 @@ unsigned int create_staStationTypes(const char *j, FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -188,6 +197,7 @@ unsigned int create_staStations(const char *j, FILE *mf, FILE *f) {
 	const char *tbl = "staStations";
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[101];
 
 	// meta
@@ -195,8 +205,7 @@ unsigned int create_staStations(const char *j, FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"%s\",\n", j);
 	fprintf(mf, "\"c\":[\"security\",\"dockingCostPerVolume\",\"maxShipVolumeDockable\",\"officeRentalCost\",\"operationID\",\"stationTypeID\",\"corporationID\",\"solarSystemID\",\"constellationID\",\"regionID\",\"stationName\",\"x\",\"y\",\"z\",\"reprocessingEfficiency\",\"reprocessingStationsTake\",\"reprocessingHangarFlag\"],\n");
 	fprintf(mf, "\"k\":\"stationID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"%s\":{\n", tbl);
@@ -230,9 +239,12 @@ unsigned int create_staStations(const char *j, FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }

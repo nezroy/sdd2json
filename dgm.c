@@ -54,6 +54,7 @@ unsigned int create_dgm(FILE *mf, const char *certs_yaml) {
 unsigned int create_chrAncestries(const char *j, FILE *mf, FILE *f) {
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[1001];
 	const char *tbl = "chrAncestries";
 
@@ -62,8 +63,7 @@ unsigned int create_chrAncestries(const char *j, FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"%s\",\n", j);
 	fprintf(mf, "\"c\":[\"ancestryName\",\"bloodlineID\",\"description\",\"perception\",\"willpower\",\"charisma\",\"memory\",\"intelligence\",\"iconID\",\"shortDescription\"],\n");
 	fprintf(mf, "\"k\":\"ancestryID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"%s\":{\n", tbl);
@@ -91,9 +91,12 @@ unsigned int create_chrAncestries(const char *j, FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -101,6 +104,7 @@ unsigned int create_chrAncestries(const char *j, FILE *mf, FILE *f) {
 unsigned int create_chrAttributes(const char *j, FILE *mf, FILE *f) {
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[1001];
 	const char *tbl = "chrAttributes";
 
@@ -109,8 +113,7 @@ unsigned int create_chrAttributes(const char *j, FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"%s\",\n", j);
 	fprintf(mf, "\"c\":[\"attributeName\",\"description\",\"iconID\",\"shortDescription\",\"notes\"],\n");
 	fprintf(mf, "\"k\":\"attributeID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"%s\":{\n", tbl);
@@ -134,9 +137,12 @@ unsigned int create_chrAttributes(const char *j, FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -144,6 +150,7 @@ unsigned int create_chrAttributes(const char *j, FILE *mf, FILE *f) {
 unsigned int create_chrBloodlines(const char *j, FILE *mf, FILE *f) {
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[1001];
 	const char *tbl = "chrBloodlines";
 
@@ -152,8 +159,7 @@ unsigned int create_chrBloodlines(const char *j, FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"%s\",\n", j);
 	fprintf(mf, "\"c\":[\"bloodlineName\",\"raceID\",\"description\",\"maleDescription\",\"femaleDescription\",\"shipTypeID\",\"corporationID\",\"perception\",\"willpower\",\"charisma\",\"memory\",\"intelligence\",\"iconID\",\"shortDescription\",\"shortMaleDescription\",\"shortFemaleDescription\"],\n");
 	fprintf(mf, "\"k\":\"bloodlineID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"%s\":{\n", tbl);
@@ -191,9 +197,12 @@ unsigned int create_chrBloodlines(const char *j, FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -201,6 +210,7 @@ unsigned int create_chrBloodlines(const char *j, FILE *mf, FILE *f) {
 unsigned int create_chrFactions(const char *j, FILE *mf, FILE *f) {
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[1001];
 	const char *tbl = "chrFactions";
 
@@ -209,8 +219,7 @@ unsigned int create_chrFactions(const char *j, FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"%s\",\n", j);
 	fprintf(mf, "\"c\":[\"factionName\",\"description\",\"raceIDs\",\"solarSystemID\",\"corporationID\",\"sizeFactor\",\"stationCount\",\"stationSystemCount\",\"militiaCorporationID\",\"iconID\"],\n");
 	fprintf(mf, "\"k\":\"factionID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"%s\":{\n", tbl);
@@ -237,9 +246,12 @@ unsigned int create_chrFactions(const char *j, FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -247,6 +259,7 @@ unsigned int create_chrFactions(const char *j, FILE *mf, FILE *f) {
 unsigned int create_chrRaces(const char *j, FILE *mf, FILE *f) {
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[1001];
 	const char *tbl = "chrRaces";
 
@@ -255,8 +268,7 @@ unsigned int create_chrRaces(const char *j, FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"%s\",\n", j);
 	fprintf(mf, "\"c\":[\"raceName\",\"description\",\"iconID\",\"shortDescription\"],\n");
 	fprintf(mf, "\"k\":\"raceID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"%s\":{\n", tbl);
@@ -278,9 +290,12 @@ unsigned int create_chrRaces(const char *j, FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -288,6 +303,7 @@ unsigned int create_chrRaces(const char *j, FILE *mf, FILE *f) {
 unsigned int create_chrCertificates(const char *j, FILE *mf, FILE *f, const char *certs_yaml) {
 	const char *tbl = "chrCertificates";
 	FILE *f_yaml = NULL;
+	unsigned int count = 0;
 	int yret;
 	yaml_node_t *node;
 	yaml_node_t *bufnode;
@@ -310,8 +326,7 @@ unsigned int create_chrCertificates(const char *j, FILE *mf, FILE *f, const char
 	fprintf(mf, "\"c\":[\"name\",\"description\",\"groupID\",\"recommendedFor\",\"skillTypes\"],\n");
 	fprintf(mf, "\"m\":{\"recommendedFor\":\"[ typeID, ... ]\",\"skillTypes\":\"{ skillID: { certLevel: skillLevel, ... }, ... }\"},\n");
 	fprintf(mf, "\"k\":\"raceID\",\n");
-	fprintf(mf, "\"t\":\"yaml\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"yaml\",\n");
 
 	// data
 	fprintf(f, "\"%s\":{\n", tbl);
@@ -388,17 +403,21 @@ unsigned int create_chrCertificates(const char *j, FILE *mf, FILE *f, const char
 		if (skilltypes_idx) yaml_json_mapping(f, &ydoc, yaml_document_get_node(&ydoc, skilltypes_idx));
 		else fprintf(f, "null");
 		fprintf(f, "]");
+		count++;
 	}
 	yaml_document_delete(&ydoc);
 	yaml_parser_delete(&parser);
 	fclose(f_yaml);
 	fprintf(f, "}\n}");
 
+	fprintf(mf, "\"l\":%u\n}", count);
+
 	return 0;
 }
 
 unsigned int create_eveUnits(const char *j, FILE *mf, FILE *f) {
 	const char *tbl = "eveUnits";
+	unsigned int count = 0;
 	SQLRETURN rc;
 	SQLHSTMT stmt;
 	char txtbuf[1001];
@@ -408,8 +427,7 @@ unsigned int create_eveUnits(const char *j, FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"%s\",\n", j);
 	fprintf(mf, "\"c\":[\"unitName\",\"displayName\",\"description\"],\n");
 	fprintf(mf, "\"k\":\"unitID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"%s\":{\n", tbl);
@@ -430,9 +448,12 @@ unsigned int create_eveUnits(const char *j, FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -441,6 +462,7 @@ unsigned int create_dgmAttributeCategories(const char *j, FILE *mf, FILE *f) {
 	const char *tbl = "dgmAttributeCategories";
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[201];
 
 	// meta
@@ -448,8 +470,7 @@ unsigned int create_dgmAttributeCategories(const char *j, FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"%s\",\n", j);
 	fprintf(mf, "\"c\":[\"categoryName\",\"categoryDescription\"],\n");
 	fprintf(mf, "\"k\":\"categoryID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"%s\":{\n", tbl);
@@ -468,9 +489,12 @@ unsigned int create_dgmAttributeCategories(const char *j, FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -479,6 +503,7 @@ unsigned int create_dgmAttributeTypes(const char *j, FILE *mf, FILE *f) {
 	const char *tbl = "dgmAttributeTypes";
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[1001];
 
 	// meta
@@ -486,8 +511,7 @@ unsigned int create_dgmAttributeTypes(const char *j, FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"%s\",\n", j);
 	fprintf(mf, "\"c\":[\"attributeName\",\"description\",\"iconID\",\"defaultValue\",\"published\",\"displayName\",\"unitID\",\"stackable\",\"highIsGood\",\"categoryID\"],\n");
 	fprintf(mf, "\"k\":\"attributeID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"%s\":{\n", tbl);
@@ -516,9 +540,12 @@ unsigned int create_dgmAttributeTypes(const char *j, FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -527,6 +554,7 @@ unsigned int create_dgmEffects(const char *j, FILE *mf, FILE *f) {
 	const char *tbl = "dgmEffects";
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[1001];
 
 	// meta
@@ -534,8 +562,7 @@ unsigned int create_dgmEffects(const char *j, FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"%s\",\n", j);
 	fprintf(mf, "\"c\":[\"effectName\",\"effectCategory\",\"preExpression\",\"postExpression\",\"description\",\"guid\",\"iconID\",\"isOffensive\",\"isAssistance\",\"durationAttributeID\",\"trackingSpeedAttributeID\",\"dischargeAttributeID\",\"rangeAttributeID\",\"falloffAttributeID\",\"disallowAutoRepeat\",\"published\",\"displayName\",\"isWarpSafe\",\"rangeChance\",\"electronicChance\",\"propulsionChance\",\"distribution\",\"sfxName\",\"npcUsageChanceAttributeID\",\"npcActivationChanceAttributeID\",\"fittingUsageChanceAttributeID\"],\n");
 	fprintf(mf, "\"k\":\"attributeID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"%s\":{\n", tbl);
@@ -582,9 +609,12 @@ unsigned int create_dgmEffects(const char *j, FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -597,6 +627,7 @@ unsigned int create_dgmTypes(const char *j, FILE *mf, FILE *f) {
 	SQLINTEGER typeID;
 	SQLINTEGER valueInt;
 	SQLFLOAT valueFloat;
+	unsigned int count = 0;
 	char sql[BUFLEN] = NULLSTR;
 
 	// meta
@@ -605,8 +636,7 @@ unsigned int create_dgmTypes(const char *j, FILE *mf, FILE *f) {
 	fprintf(mf, "\"c\":[\"attributes\",\"effects\"],\n");
 	fprintf(mf, "\"k\":\"typeID\",\n");
 	fprintf(mf, "\"m\":{\"attributes\":\"{ attributeID: value, ... }\",\"effects\":\"{ effectID: isDefault, ... }\"},\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"%s\":{\n", tbl);
@@ -660,9 +690,12 @@ unsigned int create_dgmTypes(const char *j, FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }

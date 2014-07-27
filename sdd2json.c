@@ -677,8 +677,8 @@ unsigned int post_file(const char *filetag) {
 		gzbuffer(fz, 65536);
 	}
 
-	if (JSONP_FLAG) fprintf(f, "EVEn_");
-	if (GZIP_FLAG && JSONP_FLAG) gzprintf(fz, "EVEn_");
+	if (JSONP_FLAG) fprintf(f, "EVEoj_");
+	if (GZIP_FLAG && JSONP_FLAG) gzprintf(fz, "EVEoj_");
 	if (JSONP_FLAG) fprintf(f, filetag);
 	if (GZIP_FLAG && JSONP_FLAG) gzprintf(fz, filetag);
 	if (JSONP_FLAG) fprintf(f, "_callback(");
@@ -836,11 +836,11 @@ FILE* open_segment(const char *name, unsigned int segment) {
 	return f;
 }
 
-unsigned int close_segment(const char *name, unsigned int segment, FILE *f) {
+unsigned int close_segment(const char *name, unsigned int segment, FILE *f, int count) {
 	char jsonfile[BUFLEN] = NULLSTR;
 	SNPRINTF(jsonfile, BUFLEN, "%s_%02u", name, segment);
 
-	fprintf(f, "\n}\n}\n}\n}\n");
+	fprintf(f, "\n},\n\"L\":%d\n}\n}\n}\n", count);
 	fclose(f);
 	// printf("OK\n");
 	return post_file(jsonfile);

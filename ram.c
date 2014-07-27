@@ -37,6 +37,7 @@ unsigned int create_ram(FILE *mf, const char *blueprints_yaml) {
 unsigned int create_ramActivities(FILE *mf, FILE *f) {
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[1001];
 
 	// meta
@@ -44,8 +45,7 @@ unsigned int create_ramActivities(FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"ramData\",\n");
 	fprintf(mf, "\"c\":[\"activityName\",\"iconNo\",\"description\",\"published\"],\n");
 	fprintf(mf, "\"k\":\"activityID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"ramActivities\":{\n");
@@ -67,9 +67,12 @@ unsigned int create_ramActivities(FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -80,14 +83,14 @@ unsigned int create_ramAssemblyLineStations(FILE *mf, FILE *f) {
 	SQLINTEGER prev_station;
 	SQLINTEGER stationID;
 	SQLINTEGER lineTypeID;
+	unsigned int count = 0;
 
 	// meta
 	fprintf(mf, "\"ramAssemblyLineStations\":{\n");
 	fprintf(mf, "\"j\":\"ramData\",\n");
 	fprintf(mf, "\"c\":[\"quantity\",\"stationTypeID\",\"ownerID\",\"solarSystemID\",\"regionID\"],\n");
 	fprintf(mf, "\"k\":\"stationID:assemblyLineTypeID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"ramAssemblyLineStations\":{\n");
@@ -107,6 +110,7 @@ unsigned int create_ramAssemblyLineStations(FILE *mf, FILE *f) {
 			}
 			fprintf(f, "\"%ld\":{\n\"%ld\":[", stationID, lineTypeID);
 			prev_station = stationID;
+			count++;
 		}
 		else {
 			fprintf(f, ",\n\"%ld\":[", lineTypeID);
@@ -123,6 +127,8 @@ unsigned int create_ramAssemblyLineStations(FILE *mf, FILE *f) {
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
 
+	fprintf(mf, "\"l\":%u\n}", count);
+
 	return 0;
 }
 
@@ -131,6 +137,7 @@ unsigned int create_ramAssemblyLineTypes(FILE *mf, FILE *f) {
 	SQLHSTMT stmt;
 	SQLHSTMT substmt;
 	SQLINTEGER ID = 0;
+	unsigned int count = 0;
 	char sql[BUFLEN] = NULLSTR;
 	char txtbuf[1001];
 
@@ -140,8 +147,7 @@ unsigned int create_ramAssemblyLineTypes(FILE *mf, FILE *f) {
 	fprintf(mf, "\"c\":[\"assemblyLineTypeName\",\"description\",\"baseTimeMultiplier\",\"baseMaterialMultiplier\",\"baseCostMultiplier\",\"volume\",\"activityID\",\"minCostPerHour\",\"categoryMulti\",\"groupMulti\"],\n");
 	fprintf(mf, "\"k\":\"assemblyLineTypeID\",\n");
 	fprintf(mf, "\"m\":{\"categoryMulti\":\"{ categoryID: [timeMultiplier, materialMultiplier, costMultiplier], ... }\",\"groupMulti\":\"{ groupID: [timeMultiplier, materialMultiplier, costMultiplier], ... }\"},\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"ramAssemblyLineTypes\":{\n");
@@ -206,9 +212,12 @@ unsigned int create_ramAssemblyLineTypes(FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -219,14 +228,14 @@ unsigned int create_ramInstallationTypeContents(FILE *mf, FILE *f) {
 	SQLINTEGER prev_type;
 	SQLINTEGER typeID;
 	SQLINTEGER lineTypeID;
+	unsigned int count = 0;
 
 	// meta
 	fprintf(mf, "\"ramInstallationTypeContents\":{\n");
 	fprintf(mf, "\"j\":\"ramData\",\n");
 	fprintf(mf, "\"c\":[\"quantity\"],\n");
 	fprintf(mf, "\"k\":\"typeID:assemblyLineTypeID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"ramInstallationTypeContents\":{\n");
@@ -246,6 +255,7 @@ unsigned int create_ramInstallationTypeContents(FILE *mf, FILE *f) {
 			}
 			fprintf(f, "\"%ld\":{\n\"%ld\":[", typeID, lineTypeID);
 			prev_type = typeID;
+			count++;
 		}
 		else {
 			fprintf(f, ",\n\"%ld\":[", lineTypeID);
@@ -258,12 +268,15 @@ unsigned int create_ramInstallationTypeContents(FILE *mf, FILE *f) {
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
 
+	fprintf(mf, "\"l\":%u\n}", count);
+
 	return 0;
 }
 
 unsigned int create_ramBlueprints(FILE *mf, FILE *f, const char *yaml) {
 	FILE *f_yaml = NULL;
 	int yret;
+	unsigned int count = 0;
 	yaml_node_t *node;
 	yaml_node_t *bufnode;
 	yaml_node_t *valnode;
@@ -275,7 +288,6 @@ unsigned int create_ramBlueprints(FILE *mf, FILE *f, const char *yaml) {
 	int bpTypeID = 0;
 	int bpTypeIDcheck = 0;
 	int prodLimit = 0;
-	int first = 1;
 
 	// meta
 	fprintf(mf, "\"ramBlueprints\":{\n");
@@ -283,8 +295,7 @@ unsigned int create_ramBlueprints(FILE *mf, FILE *f, const char *yaml) {
 	fprintf(mf, "\"c\":[\"maxProductionLimit\",\"activities\"],\n");
 	fprintf(mf, "\"k\":\"blueprintTypeID\",\n");
 	fprintf(mf, "\"m\":{\"recommendedFor\":\"[ typeID, ... ]\",\"skillTypes\":\"{ skillID: { certLevel: skillLevel, ... }, ... }\"},\n");
-	fprintf(mf, "\"t\":\"yaml\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"yaml\",\n");
 
 	// open yaml for parsing
 	f_yaml = fopen(yaml, "rb");
@@ -351,8 +362,8 @@ unsigned int create_ramBlueprints(FILE *mf, FILE *f, const char *yaml) {
 			return 1;
 		}
 
-		if (!first) fprintf(f, ",\n");
-		first = 0;
+		if (count) fprintf(f, ",\n");
+		count++;
 		fprintf(f, "\"%d\":[", bpTypeID);
 		fprintf(f, "%d,", prodLimit);
 		if (actnode_idx) yaml_json_mapping(f, &ydoc, yaml_document_get_node(&ydoc, actnode_idx));
@@ -363,6 +374,8 @@ unsigned int create_ramBlueprints(FILE *mf, FILE *f, const char *yaml) {
 	yaml_parser_delete(&parser);
 	fclose(f_yaml);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }

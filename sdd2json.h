@@ -5,8 +5,8 @@
 #include <sql.h>
 #include <yaml.h>
 
-#define SDD2JSON_V_MAJOR 1
-#define SDD2JSON_V_MINOR 0
+#define SDD2JSON_V_MAJOR 0
+#define SDD2JSON_V_MINOR 1
 #define SDD2JSON_V_PATCH 0
 
 #define BUFLEN 256
@@ -68,7 +68,7 @@ int yaml_json_sequence(FILE*, yaml_document_t*, yaml_node_t*);
 FILE* open_datafile(const char*);
 unsigned int close_datafile(const char*, FILE*);
 FILE* open_segment(const char*, unsigned int);
-unsigned int close_segment(const char*, unsigned int, FILE*);
+unsigned int close_segment(const char*, unsigned int, FILE*, int);
 
 // all the prefix creation entries
 unsigned int create_crp(FILE*);

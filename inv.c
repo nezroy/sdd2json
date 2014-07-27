@@ -123,6 +123,7 @@ unsigned int create_inv(FILE *mf, const char *typeids_yaml, const char *iconids_
 
 unsigned int create_invIcons(FILE *mf, FILE *f, const char* iconids_yaml) {
 	FILE *f_yaml = NULL;
+	unsigned int count = 0;
 	int yret;
 	yaml_node_t *node;
 	yaml_node_t *bufnode;
@@ -135,15 +136,13 @@ unsigned int create_invIcons(FILE *mf, FILE *f, const char* iconids_yaml) {
 	int szterm = 0;
 	yaml_parser_t parser;
 	yaml_document_t ydoc;
-	int first = 1;
 	
 	// meta
 	fprintf(mf, "\"invIcons\":{\n");
 	fprintf(mf, "\"j\":\"invMeta\",\n");
 	fprintf(mf, "\"c\":[\"iconFile\",\"description\"],\n");
 	fprintf(mf, "\"k\":\"iconID\",\n");
-	fprintf(mf, "\"t\":\"yaml\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"yaml\",\n");
 
 	// parse icons file
 	f_yaml = fopen(iconids_yaml, "rb");
@@ -203,8 +202,8 @@ unsigned int create_invIcons(FILE *mf, FILE *f, const char* iconids_yaml) {
 			}
 		}
 
-		if (!first) fprintf(f, ",\n");
-		first = 0;
+		if (count) fprintf(f, ",\n");
+		count++;
 		fprintf(f, "\"%d\":[\"%s\",\"%s\"]", iconID, iconFile, (description != NULL) ? description : "");
 		free(iconFile); iconFile = NULL;
 		free(description); description = NULL;
@@ -215,12 +214,15 @@ unsigned int create_invIcons(FILE *mf, FILE *f, const char* iconids_yaml) {
 	
 	fprintf(f, "\n}\n}");
 
+	fprintf(mf, "\"l\":%u\n}", count);
+
 	return 0;
 }
 
 unsigned int create_invCategories(FILE *mf, FILE *f) {
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[3001];
 
 	// meta
@@ -228,8 +230,7 @@ unsigned int create_invCategories(FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"invMeta\",\n");
 	fprintf(mf, "\"c\":[\"categoryName\",\"description\",\"iconID\",\"published\"],\n");
 	fprintf(mf, "\"k\":\"categoryID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"invCategories\":{\n");
@@ -250,9 +251,12 @@ unsigned int create_invCategories(FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -263,14 +267,14 @@ unsigned int create_invContrabandTypes(FILE *mf, FILE *f) {
 	SQLINTEGER prev_type;
 	SQLINTEGER typeID;
 	SQLINTEGER factionID;
+	unsigned int count = 0;
 
 	// meta
 	fprintf(mf, "\"invContrabandTypes\":{\n");
 	fprintf(mf, "\"j\":\"invMeta\",\n");
 	fprintf(mf, "\"c\":[\"standingLoss\",\"confiscateMinSec\",\"fineByValue\",\"attackMinSec\"],\n");
 	fprintf(mf, "\"k\":\"typeID:factionID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"invContrabandTypes\":{\n");
@@ -290,6 +294,7 @@ unsigned int create_invContrabandTypes(FILE *mf, FILE *f) {
 			}
 			fprintf(f, "\"%ld\":{\n\"%ld\":[", typeID, factionID);
 			prev_type = typeID;
+			count++;
 		}
 		else {
 			fprintf(f, ",\n\"%ld\":[", factionID);
@@ -305,12 +310,15 @@ unsigned int create_invContrabandTypes(FILE *mf, FILE *f) {
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
 
+	fprintf(mf, "\"l\":%u\n}", count);
+
 	return 0;
 }
 
 unsigned int create_invControlTowerResourcePurposes(FILE *mf, FILE *f) {
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[101];
 
 	// meta
@@ -318,8 +326,7 @@ unsigned int create_invControlTowerResourcePurposes(FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"invMeta\",\n");
 	fprintf(mf, "\"c\":[\"purposeText\"],\n");
 	fprintf(mf, "\"k\":\"purpose\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"invControlTowerResourcePurposes\":{\n");
@@ -336,9 +343,12 @@ unsigned int create_invControlTowerResourcePurposes(FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -349,14 +359,14 @@ unsigned int create_invControlTowerResources(FILE *mf, FILE *f) {
 	SQLINTEGER prev_type;
 	SQLINTEGER typeID;
 	SQLINTEGER factionID;
+	unsigned int count = 0;
 
 	// meta
 	fprintf(mf, "\"invControlTowerResources\":{\n");
 	fprintf(mf, "\"j\":\"invMeta\",\n");
 	fprintf(mf, "\"c\":[\"purpose\",\"quantity\",\"minSecurityLevel\",\"factionID\"],\n");
 	fprintf(mf, "\"k\":\"controlTowerTypeID:resourceTypeID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"invControlTowerResources\":{\n");
@@ -376,6 +386,7 @@ unsigned int create_invControlTowerResources(FILE *mf, FILE *f) {
 			}
 			fprintf(f, "\"%ld\":{\n\"%ld\":[", typeID, factionID);
 			prev_type = typeID;
+			count++;
 		}
 		else {
 			fprintf(f, ",\n\"%ld\":[", factionID);
@@ -391,12 +402,15 @@ unsigned int create_invControlTowerResources(FILE *mf, FILE *f) {
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
 
+	fprintf(mf, "\"l\":%u\n}", count);
+
 	return 0;
 }
 
 unsigned int create_invFlags(FILE *mf, FILE *f) {
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[201];
 
 	// meta
@@ -404,8 +418,7 @@ unsigned int create_invFlags(FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"invMeta\",\n");
 	fprintf(mf, "\"c\":[\"flagName\",\"flagText\",\"orderID\"],\n");
 	fprintf(mf, "\"k\":\"flagID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"invFlags\":{\n");
@@ -425,9 +438,12 @@ unsigned int create_invFlags(FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -435,6 +451,7 @@ unsigned int create_invFlags(FILE *mf, FILE *f) {
 unsigned int create_invGroups(FILE *mf, FILE *f) {
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[3001];
 
 	// meta
@@ -442,8 +459,7 @@ unsigned int create_invGroups(FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"invMeta\",\n");
 	fprintf(mf, "\"c\":[\"categoryID\",\"groupName\",\"description\",\"iconID\",\"useBasePrice\",\"allowManufacture\",\"allowRecycler\",\"anchored\",\"anchorable\",\"fittableNonSingleton\",\"published\"],\n");
 	fprintf(mf, "\"k\":\"groupID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"invGroups\":{\n");
@@ -471,9 +487,12 @@ unsigned int create_invGroups(FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -481,6 +500,7 @@ unsigned int create_invGroups(FILE *mf, FILE *f) {
 unsigned int create_invMarketGroups(FILE *mf, FILE *f) {
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[3001];
 
 	// meta
@@ -488,8 +508,7 @@ unsigned int create_invMarketGroups(FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"invMeta\",\n");
 	fprintf(mf, "\"c\":[\"parentGroupID\",\"marketGroupName\",\"description\",\"iconID\",\"hasTypes\"],\n");
 	fprintf(mf, "\"k\":\"marketGroupID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"invMarketGroups\":{\n");
@@ -511,9 +530,12 @@ unsigned int create_invMarketGroups(FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -521,6 +543,7 @@ unsigned int create_invMarketGroups(FILE *mf, FILE *f) {
 unsigned int create_invMetaGroups(FILE *mf, FILE *f) {
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 	char txtbuf[1001];
 
 	// meta
@@ -528,8 +551,7 @@ unsigned int create_invMetaGroups(FILE *mf, FILE *f) {
 	fprintf(mf, "\"j\":\"invMeta\",\n");
 	fprintf(mf, "\"c\":[\"metaGroupName\",\"description\",\"iconID\"],\n");
 	fprintf(mf, "\"k\":\"metaGroupID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"invMetaGroups\":{\n");
@@ -549,9 +571,12 @@ unsigned int create_invMetaGroups(FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -559,14 +584,14 @@ unsigned int create_invMetaGroups(FILE *mf, FILE *f) {
 unsigned int create_invMetaTypes(FILE *mf, FILE *f) {
 	SQLRETURN rc;
 	SQLHSTMT stmt;
+	unsigned int count = 0;
 
 	// meta
 	fprintf(mf, "\"invMetaTypes\":{\n");
 	fprintf(mf, "\"j\":\"invMeta\",\n");
 	fprintf(mf, "\"c\":[\"parentTypeID\",\"metaGroupID\"],\n");
 	fprintf(mf, "\"k\":\"typeID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"invMetaTypes\":{\n");
@@ -583,9 +608,12 @@ unsigned int create_invMetaTypes(FILE *mf, FILE *f) {
 		rc = SQLFetch(stmt);
 		if (SQL_SUCCEEDED(rc)) fprintf(f, "],\n");
 		else fprintf(f, "]\n");
+		count++;
 	}
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
+
+	fprintf(mf, "\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -596,14 +624,14 @@ unsigned int create_invTypeMaterials(FILE *mf, FILE *f) {
 	SQLINTEGER prev_type;
 	SQLINTEGER typeID;
 	SQLINTEGER factionID;
+	unsigned int count = 0;
 
 	// meta
 	fprintf(mf, "\"invTypeMaterials\":{\n");
 	fprintf(mf, "\"j\":\"invMeta\",\n");
 	fprintf(mf, "\"c\":[\"quantity\"],\n");
 	fprintf(mf, "\"k\":\"typeID:materialTypeID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"invTypeMaterials\":{\n");
@@ -623,6 +651,7 @@ unsigned int create_invTypeMaterials(FILE *mf, FILE *f) {
 			}
 			fprintf(f, "\"%ld\":{\n\"%ld\":[", typeID, factionID);
 			prev_type = typeID;
+			count++;
 		}
 		else {
 			fprintf(f, ",\n\"%ld\":[", factionID);
@@ -635,6 +664,8 @@ unsigned int create_invTypeMaterials(FILE *mf, FILE *f) {
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
 
+	fprintf(mf, "\"l\":%u\n}", count);
+
 	return 0;
 }
 
@@ -646,14 +677,14 @@ unsigned int create_invTypeReactions(FILE *mf, FILE *f) {
 	SQLINTEGER prev_reactionType = 0;
 	SQLINTEGER reactionTypeID;
 	SQLSMALLINT input;
+	unsigned int count = 0;
 
 	// meta
 	fprintf(mf, "\"invTypeReactions\":{\n");
 	fprintf(mf, "\"j\":\"invMeta\",\n");
 	fprintf(mf, "\"c\":[\"quantity\"],\n");
 	fprintf(mf, "\"k\":\"typeID:reactionTypeID:input\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"invTypeReactions\":{\n");
@@ -676,6 +707,7 @@ unsigned int create_invTypeReactions(FILE *mf, FILE *f) {
 			fprintf(f, "\"%ld\":{\n\"%ld\":{\n\"%d\":[", typeID, reactionTypeID, input);
 			prev_type = typeID;
 			prev_reactionType = reactionTypeID;
+			count++;
 		}
 		else if (prev_reactionType != reactionTypeID) {
 			if (0 != prev_reactionType) {
@@ -695,6 +727,8 @@ unsigned int create_invTypeReactions(FILE *mf, FILE *f) {
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
 
+	fprintf(mf, "\"l\":%u\n}", count);
+
 	return 0;
 }
 
@@ -702,11 +736,10 @@ unsigned int create_invItems(FILE *mf) {
 	const char *tbl = "invItems";
 	unsigned int segment = 0;
 	unsigned int segsize = 15000;
-	// char jsonfile[BUFLEN] = NULLSTR;
 	int segrc;
+	unsigned int count = 0;
 	SQLINTEGER minID;
 	SQLINTEGER maxID;
-	// char *condition;
 	FILE *sf = NULL;
 
 	// meta
@@ -724,11 +757,12 @@ unsigned int create_invItems(FILE *mf) {
 		minID = -1;
 		maxID = -1;
 		segrc = create_invItems_segment(sf, segment, segsize, &minID, &maxID);
-		if (close_segment(tbl, segment, sf)) return 1;
+		if (close_segment(tbl, segment, sf, segrc)) return 1;
 		fprintf(mf, "[\"%02u\",%ld,%ld]", segment++, minID, maxID);
+		count += segrc;
 	} while (segrc == segsize);
 	if (segrc < 0) return -segrc;
-	fprintf(mf, "\n]\n}");
+	fprintf(mf, "\n],\n\"l\":%u\n}", count);
 
 	return 0;
 }
@@ -786,6 +820,7 @@ int create_invItems_segment(FILE *f, unsigned int segment, unsigned int segsize,
 unsigned int create_invTypes(FILE *mf, FILE *f, yaml_document_t *ydoc, int *node_idxs) {
 	const char *tbl = "invTypes";
 	char txtbuf[101] = NULLSTR;
+	unsigned int count = 0;
 	SQLHSTMT stmt = SQL_NULL_HSTMT;
 	SQLRETURN rc = 0;
 	yaml_node_t *node;
@@ -799,8 +834,7 @@ unsigned int create_invTypes(FILE *mf, FILE *f, yaml_document_t *ydoc, int *node
 	fprintf(mf, "\"j\":\"invTypes\",\n");
 	fprintf(mf, "\"c\":[\"groupID\",\"typeName\",\"mass\",\"volume\",\"capacity\",\"portionSize\",\"raceID\",\"basePrice\",\"published\",\"marketGroupID\",\"chanceOfDuplicating\",\"iconID\"],\n");
 	fprintf(mf, "\"k\":\"typeID\",\n");
-	fprintf(mf, "\"t\":\"sql\"\n");
-	fprintf(mf, "}");
+	fprintf(mf, "\"t\":\"sql\",\n");
 
 	// data
 	fprintf(f, "\"%s\":{\n", tbl);
@@ -810,7 +844,6 @@ unsigned int create_invTypes(FILE *mf, FILE *f, yaml_document_t *ydoc, int *node
 	rc = SQLExecDirect(stmt, "SELECT * FROM invTypes ORDER BY typeID", SQL_NTS);
 	if (!SQL_SUCCEEDED(rc)) return dump_sql_error(rc, SQL_HANDLE_STMT, stmt, 1);
 	rc = SQLFetch(stmt);
-	int count = 0;
 	while (SQL_SUCCEEDED(rc)) {
 		ID = sql_column_long(stmt, 0);
 		fprintf(f, "\"%ld\":[", ID);
@@ -860,6 +893,8 @@ unsigned int create_invTypes(FILE *mf, FILE *f, yaml_document_t *ydoc, int *node
 	SQLFreeHandle(SQL_HANDLE_STMT, stmt);
 	fprintf(f, "}\n}");
 
+	fprintf(mf, "\"l\":%u\n}", count);
+
 	return 0;
 }
 
@@ -868,6 +903,7 @@ unsigned int create_invTypesDesc(FILE *mf, yaml_document_t *ydoc, int *node_idxs
 	unsigned int segment = 0;
 	unsigned int segsize = 7500;
 	int segrc;
+	unsigned int count = 0;
 	SQLINTEGER minID;
 	SQLINTEGER maxID;
 	FILE *sf = NULL;
@@ -887,11 +923,12 @@ unsigned int create_invTypesDesc(FILE *mf, yaml_document_t *ydoc, int *node_idxs
 		minID = -1;
 		maxID = -1;
 		segrc = create_invTypesDesc_segment(sf, segment, segsize, &minID, &maxID, ydoc, node_idxs);
-		if (close_segment(tbl, segment, sf)) return 1;
+		if (close_segment(tbl, segment, sf, segrc)) return 1;
 		fprintf(mf, "[\"%02u\",%ld,%ld]", segment++, minID, maxID);
+		count += segrc;
 	} while (segrc == segsize);
 	if (segrc < 0) return -segrc;
-	fprintf(mf, "\n]\n}");
+	fprintf(mf, "\n],\n\"l\":%u\n}", count);
 
 	return 0;
 }
