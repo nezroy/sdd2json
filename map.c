@@ -229,7 +229,7 @@ unsigned int create_mapConstellations(FILE *mf, FILE *f, char space) {
 	fprintf(mf, "\"t\":\"db3\",\n");
 
 	// data
-	fprintf(f, "\"map%cConstellations%s\":{\n", space);
+	fprintf(f, "\"map%cConstellations\":{\n", space);
 	fprintf(f, "\"d\":{\n");
 	if (space == 'K') sql = "SELECT r.*, w.wormholeClassID FROM mapConstellations AS r LEFT OUTER JOIN mapLocationWormholeClasses AS w ON r.constellationID = w.locationID WHERE r.regionID < 11000000 AND r.regionID != 10000004 AND r.regionID != 10000017 AND r.regionID != 10000019 ORDER BY r.constellationID";
 	else if (space == 'J') sql = "SELECT r.*, w.wormholeClassID FROM mapConstellations AS r LEFT OUTER JOIN mapLocationWormholeClasses AS w ON r.constellationID = w.locationID WHERE r.regionID = 10000004 OR r.regionID = 10000017 OR r.regionID = 10000019 ORDER BY r.constellationID";

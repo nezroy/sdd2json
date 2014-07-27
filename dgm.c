@@ -684,7 +684,7 @@ unsigned int create_dgmTypes(const char *j, FILE *mf, FILE *f) {
 			rc = SQLFetch(substmt);
 			if (SQL_SUCCEEDED(rc)) fprintf(f, ",");
 		}
-		fprintf(f, "},");
+		fprintf(f, "}");
 		SQLFreeHandle(SQL_HANDLE_STMT, substmt);
 
 		rc = SQLFetch(stmt);
