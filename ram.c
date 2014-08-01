@@ -294,7 +294,7 @@ unsigned int create_ramBlueprints(FILE *mf, FILE *f, const char *yaml) {
 	fprintf(mf, "\"j\":\"ramData\",\n");
 	fprintf(mf, "\"c\":[\"maxProductionLimit\",\"activities\"],\n");
 	fprintf(mf, "\"k\":\"blueprintTypeID\",\n");
-	fprintf(mf, "\"m\":{\"recommendedFor\":\"[ typeID, ... ]\",\"skillTypes\":\"{ skillID: { certLevel: skillLevel, ... }, ... }\"},\n");
+	fprintf(mf, "\"m\":{\"activities\":\"{ activityID: { #see blueprints.yaml# }, ... }\"},\n");
 	fprintf(mf, "\"t\":\"yaml\",\n");
 
 	// open yaml for parsing
