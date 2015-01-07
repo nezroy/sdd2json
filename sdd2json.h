@@ -7,7 +7,7 @@
 
 #define SDD2JSON_V_MAJOR 0
 #define SDD2JSON_V_MINOR 1
-#define SDD2JSON_V_PATCH 4
+#define SDD2JSON_V_PATCH 5
 
 #define BUFLEN 256
 #define NULLSTR {0}
@@ -40,11 +40,12 @@ struct Version {
 	const char version_desc[248];
 };
 static const struct Version VERS[] = {
-		{ 105658, 100038, "Oceanus 1.0" },
-		{ 101505, 100038, "Hyperion 1.0" },
-		{ 100804, 100038, "Crius 1.9" },
-		{ 100370, 100038, "Crius 1.6" },
-		{ 100038, 100038, "Crius 1.0" }
+	{ 109013, 109013, "Rhea 1.0" },
+	{ 105658, 100038, "Oceanus 1.0" },
+	{ 101505, 100038, "Hyperion 1.0" },
+	{ 100804, 100038, "Crius 1.9" },
+	{ 100370, 100038, "Crius 1.6" },
+	{ 100038, 100038, "Crius 1.0" }
 };
 static const unsigned int VERS_N = sizeof(VERS) / sizeof(VERS[0]);
 
